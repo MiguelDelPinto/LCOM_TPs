@@ -1,0 +1,30 @@
+#ifndef _GRAPHICS_H_
+#define _GRAPHICS_H_
+
+/**
+ * @brief XPM files for graphic's display
+ */
+
+// Menus
+#include "xpms/menu.xpm"
+
+// Levels
+#include "xpms/level1_day.xpm"
+#include "xpms/level1_night.xpm"
+#include "xpms/mars_day.xpm"
+#include "xpms/mars_night.xpm"
+
+// Ships
+#include "xpms/ship.xpm"
+#include "xpms/asteroid.xpm"
+#include "xpms/spaceship.xpm"
+#include "xpms/cannonball.xpm"
+
+// Crosshair
+#include "xpms/crosshair.xpm"
+
+// Colors
+uint32_t landing_color = 0x00FF00;
+uint32_t level1_ground_color = 0x858D8A;
+
+#endif /* _GRAPHICS_H */

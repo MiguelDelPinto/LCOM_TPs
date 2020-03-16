@@ -1,0 +1,109 @@
+#include <lcom/lcf.h>
+#include "highscore.h"
+
+Highscore* create_hs() 
+{
+    Highscore* hs = (Highscore*) malloc(sizeof(Highscore));
+    if(hs == NULL) return NULL;
+
+    hs->date = init_date();   //initialize date 
+    hs->isAchieved = false;  //starts unachieved
+    hs->score = -1;          //symbolizes non achieved score
+
+    return hs;
+}
+
+
+int load_highscores(char* filepath, Highscore* hs[]) 
+{
+    FILE *f = fopen(filepath, "r+");
+    if(f == NULL) { printf("Invalid filepath/filename (%s)", filepath); return 1; }
+    else 
+    {   
+        fseek (f, 0, SEEK_END); //check if file is empty
+        if(ftell(f) == 0) {
+            char line[60];
+            for(int i=0; i<3; i++) 
+            {
+                line[0] = 0;  //clear line string
+                Date d = hs[i]->date; //isolate date in highscore var
+
+                sprintf(line,"%d %02d:%02d:%02d %02d/%02d/%d\n", hs[i]->score, d.hours, d.minutes, d.seconds, d.day, d.month, d.year); //build line with highscore
+                fprintf(f, "%s", line); //write to file
+            }
+        }
+        rewind(f);
+      
+        int linecount = 0;
+        for (char c = getc(f); c != EOF; c = getc(f))
+            if (c == '\n') linecount++; //increment if found a newline
+
+        if(linecount == 3) 
+        {
+            rewind(f);
+            for(int i=0; i<3; i++)
+            {
+                  int res = fscanf(f, "%d %u:%u:%u %u/%u/%u\n", &hs[i]->score, &hs[i]->date.hours, &hs[i]->date.minutes, &hs[i]->date.seconds, &hs[i]->date.day, &hs[i]->date.month, &hs[i]->date.year);
+
+                  if(res != 7) {
+                      printf("Invalid content inside Highscores file (%s) %d\n", filepath, res);
+                      return 1;
+                  }
+
+                  if (hs[i]->score > 0) hs[i]->isAchieved = true;
+                  else hs[i]->isAchieved = false;
+            }
+        }
+        else { printf("Invalid content inside Highscores file (%s)\n", filepath); return 1; }
+    }
+    fclose(f);
+    return 0;
+}
+
+
+
+int new_highscore(char* filepath, Highscore* hs[], int level, Highscore newHS)
+{
+    if(level != 1 && level != 2 && level != 3) return 1;
+
+    FILE *f = fopen(filepath, "r+");
+
+    if(f == NULL) { printf("Invalid filepath/filename (%s)", filepath); return 1; }
+    else 
+    {
+        hs[level-1]->score = newHS.score;
+        hs[level-1]->date  = newHS.date;
+
+        Date d;
+        char line[60];
+        for(int i=0; i<3; i++)
+        {
+            line[0] = 0;
+            if(level-1 == i) {
+                d = newHS.date;
+                sprintf(line,"%d %02d:%02d:%02d %02d/%02d/%d\n", newHS.score, d.hours, d.minutes, d.seconds, d.day, d.month, d.year); //build line with highscore
+                fprintf(f, "%s", line);             //write to file
+            }
+            else {
+                d = hs[i]->date;
+                sprintf(line,"%d %02d:%02d:%02d %02d/%02d/%d\n", hs[i]->score, d.hours, d.minutes, d.seconds, d.day, d.month, d.year); //build line with highscore
+                fprintf(f, "%s", line);             //write to file                
+            }
+        }
+
+        fclose(f);
+    }
+
+    return 0;
+}
+
+
+
+void print_highscore(Highscore hs)
+{
+    printf("Score: %d | ", hs.score); 
+    printf("Date: ");
+    print_date(hs.date);
+}
+
+

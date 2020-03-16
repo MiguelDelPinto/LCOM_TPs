@@ -1,0 +1,127 @@
+#include <lcom/lcf.h>
+#include "rtc.h"
+
+// Global variables
+int rtc_hook_id = 8;
+
+
+int rtc_subscribe_int(uint8_t *bit_no) {
+    *bit_no = BIT(rtc_hook_id);
+    if(sys_irqsetpolicy(RTC_IRQ, IRQ_REENABLE | IRQ_EXCLUSIVE, &rtc_hook_id) != OK) return 1;
+    else return 0;
+}
+ 
+int rtc_unsubscribe_int() {
+    if(sys_irqrmpolicy(&rtc_hook_id) != OK) return 1;
+    else return 0;
+}
+
+
+bool rtc_is_updating() {
+  unsigned number;
+  sys_outb(RTC_ADDR_REG, RTC_A);
+  sys_inb(RTC_DATA_REG, &number);
+
+  if(A_UIP & number) return false;
+  return true;
+}
+
+
+bool rtc_is_bcd() {
+  unsigned number;
+  sys_outb(RTC_ADDR_REG, RTC_B);
+  sys_inb(RTC_DATA_REG, &number);
+
+  if(B_REGS_MODE & number) return false;
+  return true;
+}
+
+
+unsigned bcd_convert(unsigned bcd) {
+    return (unsigned)(10*((bcd & 0xF0) >> 4) + (bcd & 0x0F));
+}
+
+
+unsigned get_seconds() {
+	unsigned number;
+	sys_outb(RTC_ADDR_REG, SEC);
+	sys_inb(RTC_DATA_REG, &number);
+
+	return bcd_convert(number);
+}
+
+
+unsigned get_minutes() {
+	unsigned number;
+	sys_outb(RTC_ADDR_REG, MNT);
+	sys_inb(RTC_DATA_REG, &number);
+
+	return bcd_convert(number);
+}
+
+
+unsigned get_hours() {
+	unsigned number;
+	sys_outb(RTC_ADDR_REG, HOUR);
+	sys_inb(RTC_DATA_REG, &number);
+
+	return bcd_convert(number);
+}
+
+
+unsigned get_day() {
+	unsigned number;
+	sys_outb(RTC_ADDR_REG, DAY);
+	sys_inb(RTC_DATA_REG, &number);
+
+	return bcd_convert(number);
+}
+
+
+unsigned get_month() {
+	unsigned number;
+	sys_outb(RTC_ADDR_REG, MONTH);
+	sys_inb(RTC_DATA_REG, &number);
+
+	return bcd_convert(number);
+}
+
+
+unsigned get_year() {
+	unsigned number;
+	sys_outb(RTC_ADDR_REG, YEAR);
+	sys_inb(RTC_DATA_REG, &number);
+
+	return bcd_convert(number);
+}
+
+
+Date get_date() {
+
+	Date date;
+  date.seconds = get_seconds();
+  date.minutes = get_minutes();
+  date.hours = get_hours();
+  date.month = get_month();
+  date.year = get_year();
+  date.day = get_day();
+
+	return date;
+}
+
+Date init_date() {
+
+  Date date;
+  date.seconds = 0;
+  date.minutes = 0;
+  date.hours = 0;
+  date.month = 0;
+  date.year = 0;
+  date.day = 0;
+
+  return date;
+}
+
+void print_date(Date date) {
+  printf("\n\n%d:%d:%d | %d/%d/%d\n\n", date.hours, date.minutes, date.seconds, date.day, date.month, date.year);
+}

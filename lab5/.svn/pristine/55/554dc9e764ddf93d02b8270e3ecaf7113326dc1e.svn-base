@@ -1,0 +1,29 @@
+#ifndef _LCOM_SPRITE_H_
+#define _LCOM_SPRITE_H_
+
+/** @defgroup sprite Sprite
+ * @{
+ *
+ * Sprite related functions
+ */
+
+typedef struct {
+  int x,y;             /**< current sprite position */
+  int xspeed, yspeed;  /**< current speeds in the x and y direction */
+  xpm_image_t img;           /**< the sprite pixmap (use read_xpm()) */
+  uint8_t *map;
+} Sprite;
+
+
+Sprite* create_sprite(xpm_map_t xpm, int x, int y,int xspeed, int yspeed);
+
+void draw_sprite(Sprite* sp);
+
+void update_sprite(Sprite* sp);
+
+void clear_sprite(Sprite* sp);
+
+void destroy_sprite(Sprite *fig);
+
+
+#endif /* _LCOM_SPRITE_H */

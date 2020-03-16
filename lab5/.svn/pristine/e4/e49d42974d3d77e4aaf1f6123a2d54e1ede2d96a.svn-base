@@ -1,0 +1,6 @@
+#ifndef _LCOM_VIDEO_CARD_H_
+#define _LCOM_VIDEO_CARD_H_
+
+int set_graphics_mode(uint16_t mode);
+
+#endif /* _LCOM_VIDEO_CARD_H */

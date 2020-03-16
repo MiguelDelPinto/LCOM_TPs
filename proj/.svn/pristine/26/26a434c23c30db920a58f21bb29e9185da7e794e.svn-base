@@ -1,0 +1,113 @@
+// Group's created headers
+#include "spacecraft.h"
+
+// Useful header
+#include <math.h> 
+
+/**
+ * @brief A static variable that holds the value of gravity's acceleration
+ */
+static int gravity = -10;
+
+/**
+ * @brief A static variable that holds the value of the boost's force
+ */
+static int boost_force = 30;
+
+/**
+ * @brief A static variable that holds the value of the friction's force
+ */
+//static int friction = 1;
+
+
+Spacecraft* create_spacecraft(xpm_map_t xpm, int x, int y) {
+  // Allocates space for the "object"
+  Spacecraft* spacecraft = (Spacecraft *) malloc (sizeof(Spacecraft));
+
+  if(spacecraft == NULL)
+    return NULL;
+
+  // Creates a sprite with no speed
+  spacecraft->sprite = create_sprite(xpm, x, y, 0, 0); 
+  
+  if(spacecraft->sprite == NULL) {
+    free(spacecraft);
+    return NULL;
+  }
+
+  // Sets the spacecraft's parameteres
+  spacecraft->angle = 0;
+  spacecraft->acceleration_x = 0;
+  spacecraft->acceleration_y = gravity;
+
+  return spacecraft;
+}
+
+
+int update_spacecraft(Spacecraft* spacecraft, bool boost, uint8_t rotate) {
+  
+  // Updates the angle of the spacecraft
+  switch(rotate) {
+    case 0:
+      break;
+    
+    case 1:
+      spacecraft->angle++;
+      break;
+
+    case 2:
+      spacecraft->angle++;
+
+    default:
+      return 1;
+  }
+
+  // Updates the velocity of the spacecraft
+  if(boost) {
+    int new_acc_x = (int)(boost_force * cos(spacecraft->angle));
+    int new_acc_y = (int)(boost_force * sin(spacecraft->angle) + gravity);
+
+    update_movement(spacecraft, new_acc_x, new_acc_y); 
+  }
+  else {
+    update_movement(spacecraft, 0, gravity);
+  }
+
+  return 0;
+}
+
+
+int update_movement(Spacecraft* spacecraft, int new_acc_x, int new_acc_y) {
+
+  // Sets the acceleration
+  spacecraft->acceleration_x = new_acc_x;
+  spacecraft->acceleration_y = new_acc_y;
+
+  // Updates the speed of the spacecraft
+  spacecraft->sprite->xspeed += spacecraft->acceleration_x;
+  spacecraft->sprite->yspeed += spacecraft->acceleration_y;
+
+  // Updates the position of the spacecraft
+  update_sprite(spacecraft->sprite);
+
+  return 0;
+}
+
+
+int draw_spacecraft(Spacecraft* spacecraft) {
+  return draw_sprite_with_rotation(spacecraft->sprite, spacecraft->angle);
+}
+
+
+//TODO: implement this function
+bool detect_colision_with_terrain(Spacecraft* spacecraft, Sprite* level, uint32_t ground_color) {
+  printf("Not completed\n");
+  return false;
+}
+
+
+//TODO: implement this function
+bool detect_colision_with_projectiles(Spacecraft* spacecraft, Sprite* projectiles[], uint8_t num_enemies) {
+  printf("Not completed\n");
+  return false;
+}

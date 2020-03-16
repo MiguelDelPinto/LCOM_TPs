@@ -1,0 +1,80 @@
+#include <lcom/lcf.h>
+#include "sprite.h"
+#include "video_card.h"
+
+Sprite* create_sprite(xpm_map_t xpm, int x, int y,int xspeed, int yspeed) {
+  // allocates space for the "object"
+  Sprite *sp = (Sprite *) malloc ( sizeof(Sprite));
+
+  if(sp == NULL)
+    return NULL;
+
+  // reads the sprite's pixmap
+  sp->map = xpm_load(xpm, XPM_8_8_8, &(sp->img));
+  
+  if(sp->map == NULL) {
+    free(sp);
+    return NULL;
+  }
+
+  // sets sprite parameters
+  sp->x = x;
+  sp->y = y;
+  sp->xspeed = xspeed;
+  sp->yspeed = yspeed;
+
+  return sp;
+}
+
+
+int draw_sprite(Sprite* sp) {
+  //draw_pixmap(sp->map, sp->img, sp->x, sp->y);
+
+  if (sp->x >= (int)get_hres() || sp->y >= (int)get_vres())
+    return 0;
+
+  uint8_t *map = sp->map;
+  unsigned num_bytes = get_bytesperpixel();
+  uint32_t color;
+  
+  for (int y = 0; y < sp->img.height; y++) {
+    
+    for (int x = 0; x < sp->img.width; x++) {
+      
+      // calculates the color, depending on the number of bytes per pixel
+      color = 0;
+      for (unsigned byte = 0; byte < num_bytes; byte++) {
+        color += *(map + byte) << byte * 8;
+      }
+      
+      if (draw_pixel(sp->x + x, sp->y + y, color))
+        return 1;
+
+      map += num_bytes;
+    }
+  }
+
+  return 0;
+}
+
+
+void update_sprite(Sprite* sp) {
+  sp->x += sp->xspeed;
+  sp->y += sp->yspeed;
+}
+
+
+void clear_sprite(Sprite* sp) {
+  vg_draw_rectangle(sp->x, sp->y, sp->img.width, sp->img.height, 0);
+}
+
+
+void destroy_sprite(Sprite *sp) {
+  if(sp == NULL)
+    return;
+
+  if(sp->map)
+    free(sp->map);
+  
+  free(sp);
+}

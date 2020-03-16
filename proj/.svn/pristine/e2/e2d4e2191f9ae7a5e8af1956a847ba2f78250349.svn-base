@@ -1,0 +1,98 @@
+#include <lcom/lcf.h>
+#include "rtc.h"
+
+// Global variables
+int rtc_hook_id = 8;
+
+
+int rtc_subscribe_int(uint8_t *bit_no) {
+    *bit_no = BIT(rtc_hook_id);
+    if(sys_irqsetpolicy(RTC_IRQ, IRQ_REENABLE | IRQ_EXCLUSIVE, &rtc_hook_id) != OK) return 1;
+    else return 0;
+}
+ 
+int rtc_unsubscribe_int() {
+    if(sys_irqrmpolicy(&rtc_hook_id) != OK) return 1;
+    else return 0;
+}
+
+
+bool rtc_check_update() {
+  uint32_t number;
+  sys_outb(RTC_ADDR_REG, RTC_A);
+  sys_inb(RTC_DATA_REG, &number);
+
+  if(A_UIP & number) return false;
+  return true;
+}
+
+
+bool rtc_is_bcd() {
+  uint32_t number;
+  sys_outb(RTC_ADDR_REG, RTC_B);
+  sys_inb(RTC_DATA_REG, &number);
+
+  if(B_REGS_MODE & number) return false;
+  return true;
+}
+
+
+uint32_t bcd_convert(uint32_t bcd) {
+    return (uint32_t)(10*((bcd & 0xF0) >> 4) + (bcd & 0x0F));
+}
+
+
+uint32_t get_sec() {
+	uint32_t number = 0;
+	sys_outb(RTC_ADDR_REG, SEC);
+	sys_inb(RTC_DATA_REG, &number);
+
+	return bcd_convert(number);
+}
+
+
+uint32_t get_min() {
+	uint32_t number = 0;
+	sys_outb(RTC_ADDR_REG, MIN);
+	sys_inb(RTC_DATA_REG, &number);
+
+	return bcd_convert(number);
+}
+
+
+uint32_t get_hour() {
+	uint32_t number = 0;
+	sys_outb(RTC_ADDR_REG, HOUR);
+	sys_inb(RTC_DATA_REG, &number);
+
+	return bcd_convert(number);
+}
+
+
+uint32_t get_day() {
+	uint32_t number = 0;
+	sys_outb(RTC_ADDR_REG, DAY);
+	sys_inb(RTC_DATA_REG, &number);
+
+	return bcd_convert(number);
+}
+
+
+uint32_t get_month() {
+	uint32_t number = 0;
+	sys_outb(RTC_ADDR_REG, MONTH);
+	sys_inb(RTC_DATA_REG, &number);
+
+	return bcd_convert(number);
+}
+
+
+uint32_t get_year() {
+	uint32_t number = 0;
+	sys_outb(RTC_ADDR_REG, YEAR);
+	sys_inb(RTC_DATA_REG, &number);
+
+	return bcd_convert(number);
+}
+
+

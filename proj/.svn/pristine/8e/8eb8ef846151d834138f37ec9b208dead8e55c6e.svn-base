@@ -1,0 +1,42 @@
+// Lcom's lcf header
+#include <lcom/lcf.h>
+
+// Group's created headers
+#include "space_lander.h"
+#include "keyboard.h"
+#include "mouse.h"
+#include "sprite.h"
+#include "video_card.h"
+#include "graphics.h"
+
+
+int play_game(uint16_t xi, uint16_t yi, uint8_t level) {
+  
+  // for now, it only prints the first level's background
+  
+  Sprite* sp = create_sprite(spaceship_xpm, xi, yi, 0, 0);
+
+  Sprite* sp2 = create_sprite(spaceship_xpm, 250, 0, 0, 0);
+
+  if(draw_sprite_with_rotation(sp, 0)) {
+    printf("Error drawing sprite\n");
+    return 1;
+  }
+
+  if(draw_sprite_with_rotation(sp2, 90)) {
+    printf("Error drawing sprite\n");
+    return 1;
+  }
+
+  destroy_sprite(sp);
+  sp = NULL;
+
+  destroy_sprite(sp2);
+  sp2 = NULL;
+
+  sleep(30);
+
+  return 0;
+}
+
+

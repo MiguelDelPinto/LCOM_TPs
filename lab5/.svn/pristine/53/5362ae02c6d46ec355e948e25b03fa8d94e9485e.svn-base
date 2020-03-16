@@ -1,0 +1,52 @@
+#ifndef _LCOM_VIDEO_CARD_H_
+#define _LCOM_VIDEO_CARD_H_
+
+#pragma pack(1)
+typedef struct {
+  uint8_t VBESignature[4];      /* VBE signature */
+  BCD VBEVersion[2];            /* VBE Version */
+  uint32_t OEMStringPTR;        /* Pointer to OEM String */
+  uint8_t Capabilities[4];      /* Capabilities of graphics controller */
+  uint32_t videoModePTR;        /* Pointer to VideoModeList */
+  uint32_t TotalMemory;         /* Number of 64kb memory blocks: Added for VBE 2.0 */
+  
+  uint16_t OEMSoftwareRev;      /* VBE implemntation Software revision */
+  uint32_t OEMVendorNamePTR;    /* Pointer to Vendor Name String */
+  uint32_t OEMProductNamePTR;   /* Pointer to Product Name String */
+  uint32_t OEMProductRevPTR;    /* Pointer to Product Revision String */
+  uint8_t Reserved[222];        /* Reserved for VBE implementation scratch area */
+  uint8_t OEMData[256];         /* Data Area for OEM Strings */
+} vbe_info_block_t;
+//PTR fields are far pointers
+
+#pragma options align = reset
+
+unsigned get_hres();
+unsigned get_vres();
+unsigned get_bitsperpixel();
+unsigned get_bytesperpixel();
+
+int set_graphics_mode(uint16_t mode);
+int map_vram_memory();
+int sync_vram_info(uint16_t mode);
+void* (vg_init)(uint16_t mode);
+
+
+/** 
+ * @brief Our own implementation of vbe_get_mode_info
+ * @brief Gets current graphics mode information 
+ * @return 0 upon success, non-zero otherwise
+ */
+int sync_vbe_mode_info(uint16_t mode, vbe_mode_info_t *info);
+int get_vbe_contr_info(vg_vbe_contr_info_t *c_info);
+
+int draw_pixel(uint16_t x, uint16_t y, uint32_t color);
+int (vg_draw_hline)(uint16_t x, uint16_t y, uint16_t len, uint32_t color);
+int (vg_draw_rectangle)(uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint32_t color);
+int (vg_draw_rectangle_matrix)(uint16_t mode, uint16_t no_rectangles, uint32_t first, uint8_t step);
+int draw_pixmap(uint8_t *map, xpm_image_t img, uint16_t x, uint16_t y);
+
+
+
+
+#endif /* _LCOM_VIDEO_CARD_H */

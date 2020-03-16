@@ -1,0 +1,297 @@
+// Lcom's lcf header
+#include <lcom/lcf.h>
+// Group's created headers
+#include "space_lander.h"
+#include "keyboard.h"
+#include "mouse.h"
+#include "video_card.h"
+#include "sprite.h"
+#include "graphics.h"
+#include "spacecraft.h"
+#include "asteroid.h"
+
+// State variables
+static GameStates game_state = GAME; // FOR NOW IT STARTS IN GAME, NOT IN MENU
+//static MenuStates menu_state = WAITING;
+
+// Spacecraft, background, asteroid variables
+static Sprite* background;
+static Asteroid* asteroids[ASTEROID_AMOUNT];
+static Spacecraft* spacecraft;
+bool drawn_background = false;
+int asteroid_index = 0;
+
+// Device data
+extern uint8_t scancode;
+extern uint8_t irq_set_timer, irq_set_keyboard, irq_set_mouse;
+extern uint32_t global_interrupt_counter;
+
+
+void start_lunar_lander() {
+  for(int i=0; i<ASTEROID_AMOUNT; ++i)
+    asteroids[i] = create_asteroid(asteroid_xpm);
+  spacecraft = create_spacecraft(ship_xpm, 0, 0);
+  background = create_sprite(level1_night_xpm, 0, 0, 0, 0); // CHANGE TO MENU LATER
+
+  events.timer_occured = false;
+  events.keyboard_occured = false;
+  events.mouse_occured = false;
+}
+
+
+void play_lunar_lander() {
+  int ipc_status, r;
+  message msg;
+
+  uint8_t packet_array[3];
+  uint8_t index = 0;
+
+  while (game_state != QUIT)
+  {
+    // get a request message
+    if ((r = driver_receive(ANY, &msg, &ipc_status)) != 0) {
+      printf("driver_receive failed with: %d", r);
+      continue;
+    }
+    // received notification
+    if (is_ipc_notify(ipc_status))
+    {
+      switch (_ENDPOINT_P(msg.m_source))
+      {
+        case HARDWARE: 
+          // ------------ TIMER INTERRUPTS ------------
+          if (msg.m_notify.interrupts & irq_set_timer) 
+          {
+              timer_int_handler();
+                
+              if((global_interrupt_counter) % (sys_hz()/60) == 0) {
+                events.timer_occured = true;
+                timer_event.type = UPDATE;
+              }
+              //FIX THIS LATER
+              if(game_state == GAME && (global_interrupt_counter) % 3 == 0) {
+                events.timer_occured = true;
+                timer_event.type = GENERATE_ASTEROID;
+              }
+          }
+
+
+          // ------------ KEYBOARD INTERRUPTS ------------
+          if (msg.m_notify.interrupts & irq_set_keyboard)
+          {
+              kbc_ih();
+              switch(scancode) {
+                case ESC_BREAK_CODE:
+                  events.keyboard_occured = true;
+                  keyboard_event.type = ESCAPE;
+                  break;
+
+                case SPACE_MAKE_CODE:
+                  events.keyboard_occured = true;
+                  keyboard_event.type = SPACE_PRESS;
+                  break;
+
+                case SPACE_BREAK_CODE:
+                  events.keyboard_occured = true;
+                  keyboard_event.type = SPACE_RELEASE;
+                  break;
+
+                case LEFT_ARROW_MAKE_CODE:
+                  events.keyboard_occured = true;
+                  keyboard_event.type = LEFT_ARROW_PRESS;
+                  break;
+
+                case LEFT_ARROW_BREAK_CODE:
+                  events.keyboard_occured = true;
+                  keyboard_event.type = LEFT_ARROW_RELEASE;
+                  break;
+
+                case RIGHT_ARROW_MAKE_CODE:
+                  events.keyboard_occured = true;
+                  keyboard_event.type = RIGHT_ARROW_PRESS;
+                  break;
+
+                case RIGHT_ARROW_BREAK_CODE:
+                  events.keyboard_occured = true;
+                  keyboard_event.type = RIGHT_ARROW_RELEASE;
+                  break;
+
+                default:
+                  break;
+            }
+          }
+
+
+        // ----------------- MOUSE INTERRUPTS -----------------
+        if (msg.m_notify.interrupts & irq_set_mouse)
+        {
+            // calls the interrupt handler
+            mouse_ih();
+            // checks if the packet is complete and if it's synchronized
+            if (check_complete_packet(packet_array, &index))
+            {
+              struct packet pp;
+              create_packet_struct(packet_array, &pp);
+              index = 0; // resets the index of array access
+            }
+        }
+
+         break;
+
+        default:
+         break;
+      }
+
+      // Handles the events, if any has occured
+      if(events.timer_occured || events.keyboard_occured || events.mouse_occured) 
+        event_handler();
+
+    }
+    else { }
+  }  
+}
+
+
+void event_handler() 
+{
+  // -------------- TIMER EVENT --- -----------
+  if(events.timer_occured) {
+    events.timer_occured = false;
+
+    switch(game_state) {
+      /*
+      case MENU:
+
+        if (menu_state == DRAW) {
+          draw_sprite(menu);
+          menu_state = WAITING;
+        }
+        
+        else if (menu_state == PLAY_BUTTON)
+          game_state = GAME;
+
+        else if (menu_state == RULES_BUTTON)
+          game_state = RULES_PAGE;
+
+        else if (menu_state == QUIT_BUTTON)
+          game_state = QUIT;
+
+        break;
+      */
+
+      case GAME:
+        // --------------- UPDATE ---------------
+        if(timer_event.type == UPDATE) {
+          if(!drawn_background) {
+            draw_sprite(background);
+            drawn_background = true;
+          }
+          
+          update_spacecraft(spacecraft);
+          for(int i=0; i<ASTEROID_AMOUNT; ++i)
+            if(asteroids[i]->active) update_asteroid(asteroids[i]);
+
+          for(int i=0; i<ASTEROID_AMOUNT; ++i)
+            if(asteroids[i]->active && 
+              check_collision_by_size(spacecraft->sprite, asteroids[i]->sprite))
+                game_state = QUIT;
+
+          if(detect_colision_with_terrain(spacecraft, background, level1_ground_color))
+            game_state = QUIT;
+
+          if(has_landed(spacecraft, background))
+            game_state = QUIT;
+
+          //clear_spacecraft(spacecraft, background);
+          draw_sprite(background);
+          draw_spacecraft(spacecraft);
+
+          for(int i=0; i<ASTEROID_AMOUNT; ++i)
+            if(asteroids[i]->active) draw_asteroid(asteroids[i]);
+
+          switch_buffers();
+        }
+        
+        // -------------- ASTEROIDS --------------
+        if(timer_event.type == GENERATE_ASTEROID) {
+          asteroids[asteroid_index]->active = true;
+          asteroid_index++;
+          if(asteroid_index == ASTEROID_AMOUNT) 
+            asteroid_index = 0;
+        }
+        
+        break;
+
+      default:
+        break;
+    }
+  }
+
+  
+  // -------------- KEYBOARD EVENT --------------
+  if(events.keyboard_occured) {
+    events.keyboard_occured = false;
+
+    switch(game_state) 
+    {
+      case GAME:
+        switch(keyboard_event.type) {
+          case ESCAPE:
+            game_state = QUIT;   // TODO: Change so that it goes back to menu
+            destroy_lunar_lander();
+            break;
+
+          case SPACE_PRESS:
+            start_boost(spacecraft);
+            break;
+
+          case SPACE_RELEASE:
+            stop_boost(spacecraft);
+            break;
+
+          case LEFT_ARROW_PRESS:
+            rotate_left(spacecraft);
+            break;
+
+          case LEFT_ARROW_RELEASE:
+            stop_rotating(spacecraft);
+            break;
+
+          case RIGHT_ARROW_PRESS:
+            rotate_right(spacecraft);
+            break;
+
+          case RIGHT_ARROW_RELEASE:
+            stop_rotating(spacecraft);
+            break;
+        }
+        break;
+
+      default:
+        break;
+    }
+  }
+
+
+  // -------------- MOUSE EVENT --------------
+  if(events.mouse_occured) {
+    events.mouse_occured = false;
+  }
+}
+
+
+
+void destroy_lunar_lander() {
+  destroy_spacecraft(spacecraft);
+  spacecraft = NULL;
+
+  destroy_sprite(background);
+  background = NULL;
+
+  for(int i=0; i<ASTEROID_AMOUNT; i++) {
+    destroy_asteroid(asteroids[i]);
+    asteroids[i] = NULL;
+  }
+}
+
+

@@ -1,0 +1,28 @@
+#ifndef _HIGHSCORES_H_
+#define _HIGHSCORES_H_
+
+#include <lcom/lcf.h>
+#include "rtc.h"
+
+// ------------ MACROS ------------
+#define FILEPATH "/home/lcom/labs/proj/hs.txt"
+
+
+// ------------ TYPES ------------
+typedef struct {
+
+  bool isAchieved;    //Bool variable that tells if score was achieved already
+  int score;          //Score value for the highscore
+  Date date;          //Date variable holding when HS was achieved
+
+} Highscore;
+
+
+Highscore* create_hs();
+int load_highscores(Highscore* hs[]);
+int new_highscore(Highscore* hs[], int level, Highscore newHS);
+void draw_highscore(Highscore hs);
+
+
+
+#endif /* _LCOM_HIGHSCORE_H */

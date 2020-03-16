@@ -1,0 +1,16 @@
+#ifndef _SPACE_LANDER_H_
+#define _SPACE_LANDER_H_
+
+
+/**
+ * @brief Main function that plays one of the five levels
+ * 
+ * @param xi The ship's starting x coordinate
+ * @param yi The ship's starting y coordinate
+ * @param level Level to be played (1 to 5)
+ * @return int 0 if level was passed, 1 is level was failed, 2 if an error ocurred
+ */
+int play_game(uint16_t xi, uint16_t yi, uint8_t level);
+
+
+#endif /* _SPACE_LANDER_H */

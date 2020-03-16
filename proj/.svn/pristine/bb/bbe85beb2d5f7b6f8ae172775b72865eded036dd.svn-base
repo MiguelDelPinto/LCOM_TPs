@@ -1,0 +1,38 @@
+#include "uart_protocol.h"
+#include "serial_port.h"
+#include "utils.h"
+#include "uart.h"
+
+bool (serial_port_received_all)(char** msg, uint16_t* length) 
+{
+  if(*length == 0) {
+    return false;
+  }
+  else if (*length > MAX_MSG_SIZE) {
+    free(*msg);
+    *length = 0;
+    *msg = NULL;
+    return false;
+  }
+
+  switch((*msg)[0]) {
+    // Landed
+    case 'L':
+      if(*length == LANDED_EVENT_SIZE)
+        return true;
+
+      return false;
+      break;
+
+    // Blown up
+    case 'B':
+      if(*length == BLOWN_UP_EVENT_SIZE)
+        return true;
+      
+      return false;
+      
+  }
+
+  return 0;
+}
+

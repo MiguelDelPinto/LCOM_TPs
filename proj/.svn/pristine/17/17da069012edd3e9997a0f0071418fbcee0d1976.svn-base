@@ -1,0 +1,177 @@
+// Lcom's lcf header
+#include <lcom/lcf.h>
+
+// Useful header
+#include <math.h>
+
+// Group's created headers
+#include "sprite.h"
+#include "video_card.h"
+
+Sprite* create_sprite(xpm_map_t xpm, int x, int y, int xspeed, int yspeed) {
+  // Allocates space for the "object"
+  Sprite *sp = (Sprite *) malloc (sizeof(Sprite));
+
+  if(sp == NULL)
+    return NULL;
+
+  // Reads the sprite's pixmap
+  sp->map = xpm_load(xpm, XPM_8_8_8, &(sp->img));
+  
+  if(sp->map == NULL) {
+    free(sp);
+    return NULL;
+  }
+
+  // Sets sprite parameters
+  sp->x = x;
+  sp->y = y;
+  sp->xspeed = xspeed;
+  sp->yspeed = yspeed;
+
+  return sp;
+}
+
+
+int draw_sprite(Sprite* sp) {
+
+  // Checks if the sprite is inside the screen
+  if (sp->x >= (int)get_hres() || sp->y >= (int)get_vres())
+    return 0;
+
+  // Color variables
+  uint8_t *map = sp->map;
+  unsigned num_bytes = get_bytesperpixel();
+  uint32_t color;
+  
+  for (int y = 0; y < sp->img.height; y++) {
+    
+    for (int x = 0; x < sp->img.width; x++) {
+      
+      // Calculates the color, depending on the number of bytes per pixel
+      color = 0;
+      for (unsigned byte = 0; byte < num_bytes; byte++) {
+        color += *(map + byte) << byte * 8;
+      }
+      
+      if (draw_pixel(sp->x + x, sp->y + y, color))
+        return 1;
+
+      map += num_bytes;
+    }
+  }
+
+  return 0;
+}
+
+int draw_sprite_with_rotation(Sprite* sp, uint16_t angle) {
+
+  if (sp->x >= (int)get_hres() || sp->y >= (int)get_vres())
+    return 0;
+
+  // Color variables
+  uint8_t *map = sp->map;
+  unsigned num_bytes = get_bytesperpixel();
+  uint32_t color;
+
+  // Angles
+  double angle_radians = degrees_to_radians(angle);
+  double cossine = cos(angle_radians);
+  double sine = sin(angle_radians);
+
+  // Calculates the middle of the sprite
+  double rotated_x, rotated_y;
+  double translated_x, translated_y;
+  double middle_x = (double)(sp->x + (sp->img.width/2.0));
+  double middle_y = (double)(sp->y + (sp->img.height/2.0));
+
+  for (int y = 0; y < sp->img.height; y++) {
+    
+    for (int x = 0; x < sp->img.width; x++) {
+
+      // Calculates the color, depending on the number of bytes per pixel
+      memcpy(&color, map, num_bytes);
+
+      // Translate point back to its place
+      translated_x = (double)(x + sp->x - middle_x);
+      translated_y = (double)(y + sp->y - middle_y);
+
+      // Rotates in relation to the middle point
+      rotated_x = translated_x*cossine - translated_y*sine;
+      rotated_y = translated_x*sine + translated_y*cossine;
+
+      // Translate point to the middle of the sprite
+      translated_x = floor(rotated_x + middle_x);
+      translated_y = floor(rotated_y + middle_y);
+      
+      if (draw_pixel((uint16_t)translated_x, (uint16_t)translated_y, color))
+        return 1;
+
+      map += num_bytes;
+    }
+  }
+
+  return 0;
+}
+
+
+void update_sprite(Sprite* sp) {
+  sp->x += sp->xspeed;
+  sp->y += sp->yspeed;
+}
+
+
+void clear_sprite(Sprite* sp) {
+  vg_draw_rectangle(sp->x, sp->y, sp->img.width, sp->img.height, 0);
+}
+
+
+int clear_sprite_with_cover(Sprite* sp, Sprite* background) {
+  uint8_t max_length = sp->img.height;
+  if(sp->img.width > max_length)
+    max_length = sp->img.width;
+
+  // Checks if the sprite is inside the screen
+  if (sp->x >= (int)get_hres() || sp->y >= (int)get_vres())
+    return 0;
+
+  // Color variables
+  uint8_t *map = background->map;
+  unsigned num_bytes = get_bytesperpixel();
+  uint32_t color;
+
+  // Determine portion of background to draw
+  map += num_bytes*(sp->x*sp->y);
+  
+  for (int y = 0; y < max_length; y++) {
+    
+    for (int x = 0; x < max_length; x++) {
+      
+      // Calculates the color, depending on the number of bytes per pixel
+      memcpy(&color, map, num_bytes);
+      
+      if (draw_pixel(sp->x + x, sp->y + y, color))
+        return 1;
+
+      map += num_bytes;
+    }
+  } 
+
+  return 0;
+}
+
+
+void destroy_sprite(Sprite *sp) {
+  if(sp == NULL)
+    return;
+
+  if(sp->map)
+    free(sp->map);
+  
+  free(sp);
+}
+
+
+double degrees_to_radians(double degrees) {
+  return (double)(degrees*M_PI/180);
+}

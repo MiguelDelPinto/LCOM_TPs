@@ -1,0 +1,126 @@
+#ifndef _LCOM_RTC_H_
+#define _LCOM_RTC_H_
+
+#include <lcom/lcf.h>
+
+// ------------ TIME MACROS -----------
+#define SEC   0x00
+#define MNT  0x02
+#define HOUR  0x04
+#define DAY   0x07
+#define MONTH 0x08
+#define YEAR  0x09
+
+
+// ---------- CONTROL MACROS ----------
+#define RTC_A 0x0A
+#define RTC_B 0x0B
+#define RTC_C 0x0C
+#define RTC_D 0x0D
+
+#define RTC_IRQ      0x08
+#define RTC_ADDR_REG 0x70
+#define RTC_DATA_REG 0x71
+
+
+// -------- REGISTER A MACROS ---------
+#define A_UIP BIT(7)        // update in progress
+
+
+// -------- REGISTER B MACROS ---------
+#define B_HOUR_MODE BIT(1)  // 24h / 12am-pm
+#define B_REGS_MODE BIT(2)  // regs in BINARY if 1 || regs in BCD if 0 
+#define B_UPDATE    BIT(4)  // update interrupt set
+#define B_ALARM     BIT(5)  // alarm interrupt set
+#define B_PERIODIC  BIT(6)  // periodic interrupt set
+
+
+// -------- REGISTER C MACROS ---------
+#define C_UPDATE    BIT(4)  // update interrupt pending
+#define C_ALARM     BIT(5)  // alarm interrupt pending
+#define C_PERIODIC  BIT(6)  // periodic interrupt pending
+
+
+
+
+/**
+ * @brief Subscribes to interrupts from the Real Time Clock (RTC)
+ * @param bit_no Used to correctly identify interrupts, by serving as a mask for irq_set
+ * @return 0 upon success, 1 otherwise
+ */
+int rtc_subscribe_int();
+
+
+/**
+ * @brief Unsubscribes from the RTC's interrupts
+ * @return 0 upon success, 1 otherwise
+ */
+int rtc_unsubscribe_int();
+
+
+/**
+ * @brief Checks if RTC is updating
+ * @return true if RTC is updating, false otherwise
+ */
+bool rtc_check_update();
+
+
+/**
+ * @brief Checks if RTC is in BCD mode
+ * @return true if RTC is in BCD mode, false if it is in BINARY mode
+ */
+bool rtc_is_bcd();
+
+
+/**
+ * @brief converts a BCD number into a BINARY number. If the number isn't in BCD, the number remains in BINARY
+ * @return BINARY number
+ */
+uint32_t bcd_convert(uint32_t bcd);
+
+
+/**
+ * @brief Get RTC seconds
+ * @return seconds 
+ */
+uint32_t get_sec();
+
+
+/**
+ * @brief Get RTC minutes
+ * @return hours
+ */
+uint32_t get_min();
+
+
+/**
+ * @brief Get RTC hours
+ * @return hours
+ */
+uint32_t get_hour();
+
+
+/**
+ * @brief Get RTC day of the month
+ * @return day of month
+ */
+uint32_t get_day();
+
+
+/**
+ * @brief Get RTC month
+ * @return month
+ */
+uint32_t get_month();
+
+
+/**
+ * @brief Get RTC year
+ * @return year
+ */
+uint32_t get_year();
+
+
+#endif /* _LCOM_RTC_H */
+
+

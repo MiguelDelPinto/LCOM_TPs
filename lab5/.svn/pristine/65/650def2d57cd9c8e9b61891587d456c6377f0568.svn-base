@@ -1,0 +1,28 @@
+#ifndef _LCOM_VIDEO_CARD_H_
+#define _LCOM_VIDEO_CARD_H_
+
+unsigned get_hres();
+unsigned get_vres();
+unsigned get_bitsperpixel();
+unsigned get_bytesperpixel();
+
+int set_graphics_mode(uint16_t mode);
+int map_vram_memory();
+int sync_vram_info(uint16_t mode);
+void* (vg_init)(uint16_t mode);
+
+
+/** 
+ * @brief Our own implementation of vbe_get_mode_info
+ * @brief Gets current graphics mode information 
+ * @return 0 upon success, non-zero otherwise
+ */
+int sync_vbe_mode_info(uint16_t mode, vbe_mode_info_t *info);
+
+int draw_pixel(uint16_t x, uint16_t y, uint32_t color);
+int (vg_draw_hline)(uint16_t x, uint16_t y, uint16_t len, uint32_t color);
+int (vg_draw_rectangle)(uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint32_t color);
+int (vg_draw_rectangle_matrix)(uint16_t mode, uint16_t no_rectangles, uint32_t first, uint8_t step);
+int draw_pixmap(uint8_t *map, xpm_image_t img, uint16_t x, uint16_t y);
+
+#endif /* _LCOM_VIDEO_CARD_H */

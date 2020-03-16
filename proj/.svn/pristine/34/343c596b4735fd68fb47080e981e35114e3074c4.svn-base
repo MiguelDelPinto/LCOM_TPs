@@ -1,0 +1,23 @@
+#ifndef _GRAPHICS_H_
+#define _GRAPHICS_H_
+
+/** @defgroup i8254 i8254
+ * @{
+ *
+ * XPM files for graphic's display
+ */
+
+
+// Levels
+#include "xpms/level1_day.xpm"
+#include "xpms/level1_night.xpm"
+
+// Ships
+#include "xpms/ship.xpm"
+
+
+/**
+ * @} 
+ */
+
+#endif /* _GRAPHICS_H */

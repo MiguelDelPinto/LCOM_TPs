@@ -1,0 +1,35 @@
+#include <lcom/lcf.h>
+
+#include "macros.h"
+#include "video_card.h"
+
+int set_graphics_mode(uint16_t mode) {
+  struct minix_mem_range mr;
+  mr.mr_base = 0;	
+  mr.mr_limit = 1 << 20;  
+
+  int response;	
+  if( OK != (response = sys_privctl(SELF, SYS_PRIV_ADD_MEM, &mr)))
+    panic("sys_privctl (ADD_MEM) failed: %d\n", response);
+
+  // clears the struct to avoid undepredictability
+  reg86_t r86;
+  memset(&r86, 0, sizeof(r86));
+
+  r86.ah = VBE_FUNCTION;
+  r86.al = SET_VBE_MODE;
+  r86.bx = mode | LINEAR_FRAME_BUFFER;  
+  r86.intno = BIOS_SERVICE;
+
+  if(sys_int86(&r86) != OK) {
+    printf("Error in sys_int86()\n");
+    return 1;
+  }
+
+  if(r86.ah != VBE_OK) {
+    printf("VBE return value is different from expected\n");
+    return 1;
+  }
+
+  return 0;
+}

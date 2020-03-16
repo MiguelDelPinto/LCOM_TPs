@@ -1,0 +1,21 @@
+#ifndef _LCOM_MACROS_H_
+#define _LCOM_MACROS_H_
+
+#include <lcom/lcf.h>
+#include <minix/sysutil.h>
+
+/* General macros */
+
+#define LINEAR_FRAME_BUFFER   BIT(14)
+
+
+/* VBE */
+
+#define VBE_OK        0x00
+#define BIOS_SERVICE  0x10
+
+#define VBE_FUNCTION  0x4F
+#define SET_VBE_MODE  0x02
+
+
+#endif /* _LCOM_MACROS_H */
