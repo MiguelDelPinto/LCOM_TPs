@@ -12,14 +12,14 @@ Labs and project developed in LCOM - 2019/20 (Computer Laboratory - 2nd year of 
 
 ## Grades
 
-**Lab 2:** 100/100
+* **Lab 2:** 100/100
 
-**Lab 3:** 97/100
+* **Lab 3:** 97/100
 
-**Lab 4:** 93/100
+* **Lab 4:** 93/100
 
-**Lab 5:** 91/100
+* **Lab 5:** 91/100
 
-**Project:** 19.5/20
+* **Project:** 19.5/20
 
-**Final grade:** 20
+* **Final grade:** 20
