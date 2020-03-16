@@ -10,6 +10,7 @@ Labs and project developed in LCOM - 2019/20 (Computer Laboratory - 2nd year of 
 * **Miguel Pinto** - [MiguelDelPinto](https://github.com/MiguelDelPinto)
 * **Francisco Gonçalves** - [kiko-g](https://github.com/kiko-g)
 
+## Grades
 
 **Lab 2:** 100/100
 
